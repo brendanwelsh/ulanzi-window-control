@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <link rel="stylesheet" href="../../libs/css/uspi.css" />
+  <script src="../../libs/js/constants.js"></script>
+  <script src="../../libs/js/eventEmitter.js"></script>
+  <script src="../../libs/js/timers.js"></script>
+  <script src="../../libs/js/utils.js"></script>
+  <script src="../../libs/js/ulanziApi.js"></script>
+</head>
+<body>
+  <div class="uspi-wrapper">
+    <div class="uspi-item">
+      <div class="uspi-item-value" style="font-size:12px;opacity:.8;line-height:1.5">
+        Pressing this key toggles the <b>Window Switcher</b> between
+        <b>terminals only</b> and <b>all windows</b>. The key label shows the current mode.
+        No settings needed.
+      </div>
+    </div>
+  </div>
+  <script>$UD.connect("com.ulanzi.ulanzistudio.windowcontrol.filter");</script>
+</body>
+</html>

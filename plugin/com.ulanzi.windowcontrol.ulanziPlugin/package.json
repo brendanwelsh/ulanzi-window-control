@@ -1,0 +1,11 @@
+{
+  "name": "com.ulanzi.windowcontrol.ulanziPlugin",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Ulanzi Deck plugin: scroll & focus windows from the dial, plus komorebi tiling controls.",
+  "main": "plugin/app.js",
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

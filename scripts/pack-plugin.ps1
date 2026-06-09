@@ -3,9 +3,9 @@
 # Run from the repo root: npm run pack
 $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
-$pluginDir = Join-Path $root 'plugin\com.ulanzi.claudelauncher.ulanziPlugin'
+$pluginDir = Join-Path $root 'plugin\com.ulanzi.windowcontrol.ulanziPlugin'
 $distDir = Join-Path $root 'dist'
-$zip = Join-Path $distDir 'com.ulanzi.claudelauncher.ulanziPlugin.zip'
+$zip = Join-Path $distDir 'com.ulanzi.windowcontrol.ulanziPlugin.zip'
 
 if (-not (Test-Path (Join-Path $pluginDir 'node_modules\ws'))) {
   Write-Warning "node_modules\ws not found in the plugin. Run 'npm run setup:plugin' first so the shared zip actually works."

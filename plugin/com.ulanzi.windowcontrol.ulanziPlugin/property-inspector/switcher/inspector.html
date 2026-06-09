@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <link rel="stylesheet" href="../../libs/css/uspi.css" />
+  <script src="../../libs/js/constants.js"></script>
+  <script src="../../libs/js/eventEmitter.js"></script>
+  <script src="../../libs/js/timers.js"></script>
+  <script src="../../libs/js/utils.js"></script>
+  <script src="../../libs/js/ulanziApi.js"></script>
+  <style>
+    .grp { margin: 8px 0; }
+    .lbl { font-size: 12px; opacity: .8; margin-bottom: 3px; }
+    .full { width: 100%; box-sizing: border-box; }
+    .hint { font-size: 11px; opacity: .6; line-height: 1.45; margin: 6px 0 12px; }
+    .status { font-size: 11px; opacity: .75; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <div class="uspi-wrapper">
+    <div class="grp">
+      <div class="lbl" data-localize>Scroll which windows?</div>
+      <select class="full" id="filter">
+        <option value="terminals">Terminals only</option>
+        <option value="all">All windows</option>
+      </select>
+    </div>
+    <div class="grp">
+      <div class="lbl" data-localize>Terminal processes (regex)</div>
+      <input type="text" class="full" id="regex" placeholder="WindowsTerminal|pwsh|powershell|cmd|…" />
+    </div>
+    <div class="grp">
+      <div class="lbl" data-localize>komorebic path</div>
+      <input type="text" class="full" id="komo" placeholder="komorebic" />
+    </div>
+    <div class="hint">
+      Rotate the dial to scroll windows; press to focus. A <b>Window Filter</b> key flips
+      terminals ↔ all on the fly. The regex decides what counts as a "terminal".
+    </div>
+    <div class="status" id="status"></div>
+  </div>
+
+  <script>
+    $UD.connect("com.ulanzi.ulanzistudio.windowcontrol.switcher");
+
+    const filterEl = document.getElementById("filter");
+    const regexEl = document.getElementById("regex");
+    const komoEl = document.getElementById("komo");
+    const statusEl = document.getElementById("status");
+    let saveTimer = null;
+
+    function collect() {
+      return {
+        filter: filterEl.value || "terminals",
+        terminalRegex: regexEl.value.trim(),
+        komorebicPath: komoEl.value.trim() || "komorebic",
+      };
+    }
+    function save() { try { $UD.setGlobalSettings(collect()); } catch (e) {} }
+    function debouncedSave() { clearTimeout(saveTimer); saveTimer = setTimeout(save, 400); }
+
+    function load(g) {
+      g = g || {};
+      if (g.filter) filterEl.value = g.filter;
+      if (g.terminalRegex) regexEl.value = g.terminalRegex;
+      if (g.komorebicPath) komoEl.value = g.komorebicPath;
+    }
+
+    filterEl.addEventListener("change", save);
+    regexEl.addEventListener("input", debouncedSave);
+    komoEl.addEventListener("input", debouncedSave);
+
+    $UD.onDidReceiveGlobalSettings((m) => load(m.settings || m.param || m.payload || {}));
+    $UD.onSendToPropertyInspector((m) => {
+      const d = m.param || m.payload || m.settings || {};
+      if (d.type === "config") {
+        if (d.filter) filterEl.value = d.filter;
+        if (!regexEl.value && d.terminalRegex) regexEl.value = d.terminalRegex;
+        if (!komoEl.value && d.komorebicPath) komoEl.value = d.komorebicPath;
+        statusEl.textContent = `${d.windows} window(s) currently in the list.`;
+      }
+    });
+
+    setTimeout(() => {
+      try { $UD.getGlobalSettings(); } catch (e) {}
+      try { $UD.sendToPlugin({ type: "getConfig" }); } catch (e) {}
+    }, 300);
+  </script>
+</body>
+</html>

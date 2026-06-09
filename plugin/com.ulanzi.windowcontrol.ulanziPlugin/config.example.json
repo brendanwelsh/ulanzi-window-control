@@ -1,0 +1,12 @@
+{
+  "_comment": "OPTIONAL. Copy to config.json (gitignored) only to override defaults. The Window Switcher's settings panel edits the same values in the GUI, so most people need no config file.",
+
+  "filter": "terminals",
+  "_filter_comment": "terminals | all — which windows the dial scrolls by default (toggle live with a Window Filter key).",
+
+  "terminalRegex": "WindowsTerminal|pwsh|powershell|cmd|conhost|alacritty|wezterm|kitty|mintty|wsl",
+  "_terminalRegex_comment": "process names (regex) that count as a terminal for the 'terminals' filter.",
+
+  "komorebicPath": "komorebic",
+  "_komorebicPath_comment": "command/path for komorebic; defaults to 'komorebic' on PATH."
+}

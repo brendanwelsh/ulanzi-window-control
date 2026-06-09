@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <link rel="stylesheet" href="../../libs/css/uspi.css" />
+  <script src="../../libs/js/constants.js"></script>
+  <script src="../../libs/js/eventEmitter.js"></script>
+  <script src="../../libs/js/timers.js"></script>
+  <script src="../../libs/js/utils.js"></script>
+  <script src="../../libs/js/ulanziApi.js"></script>
+  <style>
+    .grp { margin: 8px 0; }
+    .lbl { font-size: 12px; opacity: .8; margin-bottom: 3px; }
+    .full { width: 100%; box-sizing: border-box; }
+    .hint { font-size: 11px; opacity: .6; line-height: 1.45; margin: 6px 0 10px; }
+  </style>
+</head>
+<body>
+  <div class="uspi-wrapper">
+    <form id="property-inspector">
+      <div class="grp">
+        <div class="lbl" data-localize>komorebi command</div>
+        <select class="full" name="komoCmd" id="cmd">
+          <option value="retile">Reset layout (retile)</option>
+          <option value="toggle-float">Toggle float</option>
+          <option value="toggle-pause">Toggle pause</option>
+          <option value="toggle-monocle">Toggle monocle (big)</option>
+          <option value="promote">Promote to main</option>
+          <option value="close">Close window</option>
+          <option value="minimize">Minimize window</option>
+          <option value="change-layout bsp">Layout: BSP</option>
+          <option value="change-layout columns">Layout: Columns</option>
+          <option value="change-layout rows">Layout: Rows</option>
+          <option value="change-layout grid">Layout: Grid</option>
+          <option value="flip-layout horizontal">Flip layout horizontal</option>
+          <option value="flip-layout vertical">Flip layout vertical</option>
+          <option value="focus left">Focus left</option>
+          <option value="focus right">Focus right</option>
+          <option value="focus up">Focus up</option>
+          <option value="focus down">Focus down</option>
+          <option value="reload-configuration">Reload configuration</option>
+          <option value="custom">Custom…</option>
+        </select>
+      </div>
+      <div class="grp" id="customWrap" style="display:none">
+        <div class="lbl" data-localize>Custom komorebic args</div>
+        <input type="text" class="full" name="komoCustom" id="custom" placeholder="e.g. cycle-focus next" />
+      </div>
+      <div class="hint">
+        The key runs <code>komorebic &lt;command&gt;</code>. Drop several keys for a komorebi
+        cluster — e.g. retile, float, pause, and a few layout presets.
+      </div>
+    </form>
+  </div>
+
+  <script>
+    const ACTION = "com.ulanzi.ulanzistudio.windowcontrol.komocmd";
+    const cmd = document.getElementById("cmd");
+    const customWrap = document.getElementById("customWrap");
+    let savedParam = null;
+
+    $UD.connect(ACTION);
+
+    function syncCustom() { customWrap.style.display = cmd.value === "custom" ? "" : "none"; }
+    function applySaved() {
+      if (savedParam) Utils.setFormValue(savedParam, "#property-inspector");
+      syncCustom();
+    }
+    function sendUp() {
+      const params = Utils.getFormValue("#property-inspector");
+      $UD.sendParamFromPlugin(params);
+    }
+
+    $UD.onAdd((message) => {
+      savedParam = message.param || null;
+      applySaved();
+    });
+
+    document.getElementById("property-inspector").addEventListener("change", () => {
+      syncCustom();
+      sendUp();
+    });
+    document.getElementById("custom").addEventListener("input", sendUp);
+
+    // default the dropdown view even before any saved settings arrive
+    setTimeout(syncCustom, 200);
+  </script>
+</body>
+</html>

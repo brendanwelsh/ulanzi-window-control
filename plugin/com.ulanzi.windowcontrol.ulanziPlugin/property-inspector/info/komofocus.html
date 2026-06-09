@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <link rel="stylesheet" href="../../libs/css/uspi.css" />
+  <script src="../../libs/js/constants.js"></script>
+  <script src="../../libs/js/eventEmitter.js"></script>
+  <script src="../../libs/js/timers.js"></script>
+  <script src="../../libs/js/utils.js"></script>
+  <script src="../../libs/js/ulanziApi.js"></script>
+</head>
+<body>
+  <div class="uspi-wrapper">
+    <div class="uspi-item">
+      <div class="uspi-item-value" style="font-size:12px;opacity:.8;line-height:1.5">
+        <b>Rotate</b> = cycle komorebi focus to the next / previous window
+        (<code>komorebic cycle-focus</code>).<br /><br />
+        <b>Press</b> = toggle monocle — make the focused window big, press again to go back
+        (<code>komorebic toggle-monocle</code>).<br /><br />
+        Requires komorebi to be running. No settings needed.
+      </div>
+    </div>
+  </div>
+  <script>$UD.connect("com.ulanzi.ulanzistudio.windowcontrol.komofocus");</script>
+</body>
+</html>

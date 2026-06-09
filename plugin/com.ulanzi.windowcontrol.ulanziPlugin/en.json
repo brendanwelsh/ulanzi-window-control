@@ -1,0 +1,32 @@
+{
+  "Name": "Window Control",
+  "Description": "Scroll & focus windows from the Ulanzi dial, plus komorebi tiling controls on the knob and keys.",
+  "Actions": [
+    {
+      "Name": "Window Switcher",
+      "Tooltip": "Rotate to scroll windows, press to focus the selected one"
+    },
+    {
+      "Name": "komorebi Focus",
+      "Tooltip": "Rotate to cycle komorebi focus, press to toggle monocle (focus big / out)"
+    },
+    {
+      "Name": "Window Filter",
+      "Tooltip": "Toggle the Window Switcher between terminals-only and all windows"
+    },
+    {
+      "Name": "komorebi Command",
+      "Tooltip": "Run a chosen komorebic command (retile, float, pause, layout, …)"
+    }
+  ],
+  "Localization": {
+    "Windows": "Windows",
+    "komorebi": "komorebi",
+    "Filter": "Filter",
+    "Scroll which windows?": "Scroll which windows?",
+    "Terminal processes (regex)": "Terminal processes (regex)",
+    "komorebic path": "komorebic path",
+    "komorebi command": "komorebi command",
+    "Custom komorebic args": "Custom komorebic args"
+  }
+}

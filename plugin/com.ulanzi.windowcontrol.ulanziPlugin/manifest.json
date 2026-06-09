@@ -1,0 +1,76 @@
+{
+  "Author": "Welsh",
+  "Name": "Window Control",
+  "Description": "Drive your windows from the Ulanzi dial: rotate to scroll windows (terminals or all) and press to focus; plus komorebi tiling controls — focus/monocle on the knob, retile/float/pause/layout on keys.",
+  "Icon": "resources/pluginIcon.png",
+  "Version": "1.0.0",
+  "Category": "Window Control",
+  "CategoryIcon": "resources/categoryIcon.png",
+  "CodePath": "plugin/app.js",
+  "Type": "JavaScript",
+  "UUID": "com.ulanzi.ulanzistudio.windowcontrol",
+  "Actions": [
+    {
+      "Name": "Window Switcher",
+      "Icon": "resources/action.png",
+      "PropertyInspectorPath": "property-inspector/switcher/inspector.html",
+      "state": 0,
+      "States": [{ "Name": "Windows", "Image": "resources/state.png" }],
+      "Tooltip": "Rotate to scroll windows, press to focus the selected one",
+      "UUID": "com.ulanzi.ulanzistudio.windowcontrol.switcher",
+      "SupportedInMultiActions": false,
+      "Controllers": ["Encoder"],
+      "Encoder": {
+        "layout": "$UA1",
+        "TriggerDescription": {
+          "Rotate": "Scroll windows",
+          "Push": "Focus window"
+        }
+      }
+    },
+    {
+      "Name": "komorebi Focus",
+      "Icon": "resources/action.png",
+      "PropertyInspectorPath": "property-inspector/info/komofocus.html",
+      "state": 0,
+      "States": [{ "Name": "komorebi", "Image": "resources/state.png" }],
+      "Tooltip": "Rotate to cycle komorebi focus, press to toggle monocle (focus big / out)",
+      "UUID": "com.ulanzi.ulanzistudio.windowcontrol.komofocus",
+      "SupportedInMultiActions": false,
+      "Controllers": ["Encoder"],
+      "Encoder": {
+        "layout": "$UA1",
+        "TriggerDescription": {
+          "Rotate": "Cycle focus",
+          "Push": "Toggle monocle"
+        }
+      }
+    },
+    {
+      "Name": "Window Filter",
+      "Icon": "resources/action.png",
+      "PropertyInspectorPath": "property-inspector/info/filter.html",
+      "state": 0,
+      "States": [{ "Name": "Filter", "Image": "resources/state.png" }],
+      "Tooltip": "Toggle the Window Switcher between terminals-only and all windows",
+      "UUID": "com.ulanzi.ulanzistudio.windowcontrol.filter",
+      "SupportedInMultiActions": true,
+      "Controllers": ["Keypad"]
+    },
+    {
+      "Name": "komorebi Command",
+      "Icon": "resources/action.png",
+      "PropertyInspectorPath": "property-inspector/komocmd/inspector.html",
+      "state": 0,
+      "States": [{ "Name": "komorebi", "Image": "resources/state.png" }],
+      "Tooltip": "Run a chosen komorebic command (retile, float, pause, layout, …)",
+      "UUID": "com.ulanzi.ulanzistudio.windowcontrol.komocmd",
+      "SupportedInMultiActions": true,
+      "Controllers": ["Keypad"]
+    }
+  ],
+  "OS": [{ "Platform": "windows", "MinimumVersion": "10" }],
+  "Software": {
+    "MinVersion": "2.1.0"
+  }
+}
