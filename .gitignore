@@ -1,0 +1,12 @@
+node_modules/
+dist/
+build/
+*.log
+
+# Optional local override config (the GUI settings panel covers the same fields).
+config.json
+config.local.json
+.env
+.env.*
+!.env.example
+.DS_Store

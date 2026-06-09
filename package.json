@@ -1,0 +1,14 @@
+{
+  "name": "claude-dial-launcher",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Ulanzi dial -> Claude Code CLI session launcher. Scroll your recent Claude sessions on the dial, press to resume one in a terminal; assign keys to launch projects.",
+  "scripts": {
+    "build": "node scripts/sync-engine.mjs",
+    "setup:plugin": "npm --prefix plugin/com.ulanzi.claudelauncher.ulanziPlugin install",
+    "install:plugin": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/install-plugin.ps1",
+    "pack": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/pack-plugin.ps1",
+    "test": "node test/smoke.mjs"
+  }
+}

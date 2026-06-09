@@ -1,0 +1,47 @@
+{
+  "Author": "Welsh",
+  "Name": "Claude Launcher",
+  "Description": "Scroll your recent Claude Code CLI sessions on the dial and press to resume one in a terminal; assign keys to launch specific projects.",
+  "Icon": "resources/pluginIcon.png",
+  "Version": "1.0.0",
+  "Category": "Claude Launcher",
+  "CategoryIcon": "resources/categoryIcon.png",
+  "CodePath": "plugin/app.js",
+  "Type": "JavaScript",
+  "UUID": "com.ulanzi.ulanzistudio.claudelauncher",
+  "Actions": [
+    {
+      "Name": "Session Scroller",
+      "Icon": "resources/action.png",
+      "PropertyInspectorPath": "property-inspector/scroller/inspector.html",
+      "state": 0,
+      "States": [{ "Name": "Claude", "Image": "resources/state.png" }],
+      "Tooltip": "Rotate to scroll recent Claude sessions, press to resume the highlighted one",
+      "UUID": "com.ulanzi.ulanzistudio.claudelauncher.scroller",
+      "SupportedInMultiActions": false,
+      "Controllers": ["Encoder"],
+      "Encoder": {
+        "layout": "$UA1",
+        "TriggerDescription": {
+          "Rotate": "Scroll sessions",
+          "Push": "Resume session"
+        }
+      }
+    },
+    {
+      "Name": "Project Launcher",
+      "Icon": "resources/action.png",
+      "PropertyInspectorPath": "property-inspector/button/inspector.html",
+      "state": 0,
+      "States": [{ "Name": "Project", "Image": "resources/state.png" }],
+      "Tooltip": "Launch (or resume the latest) Claude session in a chosen project",
+      "UUID": "com.ulanzi.ulanzistudio.claudelauncher.launch",
+      "SupportedInMultiActions": true,
+      "Controllers": ["Keypad"]
+    }
+  ],
+  "OS": [{ "Platform": "windows", "MinimumVersion": "10" }],
+  "Software": {
+    "MinVersion": "2.1.0"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "com.ulanzi.claudelauncher.ulanziPlugin",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Ulanzi Deck plugin: scroll & resume Claude Code CLI sessions from the dial; launch projects from keys.",
+  "main": "plugin/app.js",
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

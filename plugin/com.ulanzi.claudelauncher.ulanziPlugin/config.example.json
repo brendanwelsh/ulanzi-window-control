@@ -1,0 +1,10 @@
+{
+  "_comment": "OPTIONAL. Copy to config.json (gitignored) only if you want to override defaults. The Session Scroller's settings panel edits the same values in the GUI. Everything here has a sensible default, so most people need no config file at all.",
+
+  "claudeCmd": "claude",
+  "terminal": "auto",
+  "maxSessions": 30,
+
+  "_projectsDir_comment": "Defaults to %USERPROFILE%\\.claude\\projects — only set this if your Claude CLI stores transcripts elsewhere.",
+  "projectsDir": ""
+}
