@@ -1,12 +1,12 @@
-// Window Control — Ulanzi Deck plugin main service (Node.js).
+// Window Control - Ulanzi Deck plugin main service (Node.js).
 //
 // Drives the shared engine (./window-control.js, a synced copy of ../../../shared/window-control.js).
 // Four actions, dispatched by message.uuid (the action-type UUID the SDK puts on every event):
 //
-//   Window Switcher  (Encoder) .switcher  — rotate = scroll windows, press = focus selected.
-//   komorebi Focus   (Encoder) .komofocus — rotate = cycle-focus, press = toggle-monocle (big/out).
-//   Window Filter    (Keypad)  .filter    — press = toggle terminals <-> all windows.
-//   komorebi Command (Keypad)  .komocmd   — press = run the komorebic command chosen in its PI.
+//   Window Switcher  (Encoder) .switcher  - rotate = scroll + raise windows (live switch).
+//   komorebi Focus   (Encoder) .komofocus - rotate = cycle-focus, press = toggle-monocle (big/out).
+//   Window Filter    (Keypad)  .filter    - press = toggle terminals <-> all windows.
+//   komorebi Command (Keypad)  .komocmd   - press = run the komorebic command chosen in its PI.
 
 import path from "path";
 import fs from "fs";
@@ -53,7 +53,9 @@ const filterLabel = () => (wc.cfg.filter === "all" ? "ALL WINDOWS" : "TERMINALS"
 
 // contexts we relabel live, and each komorebi-command key's chosen command
 const filterCtx = new Set();
+const switcherCtx = new Set(); // Window Switcher encoder contexts (to relabel its screen)
 const komoByCtx = new Map(); // context -> { args, label }
+let rotateFocusTimer = null; // debounce: raise the highlighted window after rotation settles
 
 // short, dial-friendly labels for the common komorebic commands
 const KOMO_LABELS = {
@@ -67,27 +69,42 @@ const KOMO_LABELS = {
   "reload-configuration": "RELOAD",
   "flip-layout horizontal": "FLIP H",
   "flip-layout vertical": "FLIP V",
-  "focus left": "FOCUS <",
-  "focus right": "FOCUS >",
-  "focus up": "FOCUS ^",
-  "focus down": "FOCUS v",
+  "focus left": "FOCUS L",
+  "focus right": "FOCUS R",
+  "focus up": "FOCUS U",
+  "focus down": "FOCUS D",
   "change-layout bsp": "BSP",
   "change-layout columns": "COLUMNS",
   "change-layout rows": "ROWS",
   "change-layout grid": "GRID",
   "change-layout vertical-stack": "V-STACK",
   "change-layout horizontal-stack": "H-STACK",
+  "focus-monitor 0; change-layout grid": "GRID M0",
+  "focus-monitor 1; change-layout grid": "GRID M1",
+  "focus-monitor 2; change-layout grid": "GRID M2",
+  "focus-monitor 0; change-layout bsp": "BSP M0",
+  "focus-monitor 1; change-layout bsp": "BSP M1",
+  "focus-monitor 2; change-layout bsp": "BSP M2",
 };
 const komoLabel = (args) =>
   KOMO_LABELS[args] || String(args).toUpperCase().replace(/[^A-Z0-9 ]+/g, " ").trim().slice(0, 12) || "KOMO";
 
-// strip leading nerd-font / private-use glyphs apps prepend to titles, trim for the dial
+// make a window title readable on the tiny dial screen: drop control chars + nerd-font/PUA glyphs,
+// collapse whitespace, keep it short. Filtering by char code avoids any tricky regex ranges.
 function cleanTitle(t) {
-  const s = String(t || "")
-    .replace(/^[\s—▶•--]+/, "")
-    .replace(/\s+/g, " ")
-    .trim();
-  return s.length > 26 ? s.slice(0, 25) + "…" : s || "—";
+  let s = "";
+  for (const ch of String(t || "")) {
+    const c = ch.codePointAt(0);
+    if (c < 0x20) continue; // control chars
+    if (c >= 0xe000 && c <= 0xf8ff) continue; // private-use area (nerd-font glyphs)
+    if (c === 0x2022 || c === 0x25b6 || c === 0x2014) {
+      s += " "; // bullet / play-triangle / em-dash -> space
+      continue;
+    }
+    s += ch;
+  }
+  s = s.replace(/\s+/g, " ").trim();
+  return s.length > 16 ? s.slice(0, 15) + "..." : s || "(window)";
 }
 
 const argsFromParam = (p) => (p.komoCmd === "custom" ? p.komoCustom : p.komoCmd) || "";
@@ -106,6 +123,11 @@ function relabelFilters() {
   for (const c of filterCtx) $UD.setStateIcon(c, 0, filterLabel());
 }
 
+// show the current selection on every Window Switcher dial screen
+function labelSwitchers(text) {
+  for (const c of switcherCtx) $UD.setStateIcon(c, 0, text);
+}
+
 $UD.connect(PLUGIN_UUID);
 
 $UD.onConnected(async () => {
@@ -114,6 +136,8 @@ $UD.onConnected(async () => {
   } catch (e) {}
   await wc.refresh();
   log(`connected; ${wc.windows.length} windows (${wc.cfg.filter})`);
+  const cur = wc.current();
+  if (cur) labelSwitchers(cleanTitle(cur.title));
 });
 
 // keep the window list fresh as windows open/close (async, never blocks a rotate)
@@ -134,9 +158,12 @@ $UD.onDidReceiveGlobalSettings((m) => {
 
 $UD.onAdd((message) => {
   switch (message.uuid) {
-    case A_SWITCHER:
-      $UD.setStateIcon(message.context, 0, "WINDOWS");
+    case A_SWITCHER: {
+      switcherCtx.add(message.context);
+      const cur = wc.current();
+      $UD.setStateIcon(message.context, 0, cur ? cleanTitle(cur.title) : "WINDOWS");
       break;
+    }
     case A_KOMOFOCUS:
       $UD.setStateIcon(message.context, 0, "KOMOREBI");
       break;
@@ -165,11 +192,12 @@ $UD.onClear((message) => {
   if (Array.isArray(message.param))
     for (const it of message.param) {
       filterCtx.delete(it.context);
+      switcherCtx.delete(it.context);
       komoByCtx.delete(it.context);
     }
 });
 
-// ── encoders ──────────────────────────────────────────────────────────────────
+// encoders
 $UD.onDialRotate((message) => {
   const dir = String(message.rotateEvent || "").includes("left") ? -1 : 1;
   if (message.uuid === A_KOMOFOCUS) return void wc.komoFocus(dir);
@@ -179,7 +207,16 @@ $UD.onDialRotate((message) => {
       return $UD.showAlert(message.context);
     }
     const w = wc.rotate(dir);
-    if (w) $UD.setStateIcon(message.context, 0, cleanTitle(w.title));
+    if (w) labelSwitchers(cleanTitle(w.title)); // update every switcher screen with the selection
+    // live switch: raise the highlighted window once rotation settles (~250ms idle)
+    clearTimeout(rotateFocusTimer);
+    rotateFocusTimer = setTimeout(() => {
+      const cur = wc.current();
+      if (cur) {
+        const ok = wc.focus(cur);
+        log(`switch -> "${cleanTitle(cur.title)}" (${cur.hwnd}) raised=${ok}`);
+      }
+    }, 250);
   }
 });
 
@@ -192,13 +229,13 @@ $UD.onDialDown((message) => {
       return $UD.showAlert(message.context);
     }
     const ok = wc.focus(w);
-    log(`focus "${w.title}" (${w.hwnd}) -> ${ok}`);
-    $UD.setStateIcon(message.context, 0, cleanTitle(w.title));
+    log(`press-focus "${cleanTitle(w.title)}" (${w.hwnd}) raised=${ok}`);
+    labelSwitchers(cleanTitle(w.title));
     if (!ok) $UD.showAlert(message.context);
   }
 });
 
-// ── keypads ─────────────────────────────────────────────────────────────────────
+// keypads
 $UD.onRun((message) => {
   if (message.uuid === A_FILTER) {
     const mode = wc.toggleFilter();
@@ -226,7 +263,7 @@ $UD.onRun((message) => {
   }
 });
 
-// ── Property Inspector data feed ──────────────────────────────────────────────
+// Property Inspector data feed
 $UD.onSendToPlugin((message) => {
   const d = paramOf(message);
   if (!d) return;

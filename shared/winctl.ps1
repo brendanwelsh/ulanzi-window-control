@@ -28,6 +28,7 @@ public class WinCtl {
   [DllImport("user32.dll")] public static extern bool BringWindowToTop(IntPtr h);
   [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
   [DllImport("user32.dll")] public static extern bool AttachThreadInput(uint a, uint b, bool attach);
+  [DllImport("user32.dll")] public static extern void keybd_event(byte vk, byte scan, uint flags, UIntPtr extra);
   [DllImport("kernel32.dll")] public static extern uint GetCurrentThreadId();
 
   const int GWL_EXSTYLE = -20;
@@ -63,6 +64,10 @@ public class WinCtl {
     uint dummy;
     uint fgThread = GetWindowThreadProcessId(fg, out dummy); // thread id is the return value
     uint cur = GetCurrentThreadId();
+    // a synthetic ALT tap makes Windows treat this as user-initiated, so SetForegroundWindow
+    // actually raises the window instead of just flashing the taskbar button.
+    keybd_event(0x12, 0, 0, UIntPtr.Zero);       // VK_MENU (ALT) down
+    keybd_event(0x12, 0, 0x0002, UIntPtr.Zero);  // VK_MENU up (KEYEVENTF_KEYUP)
     bool attached = false;
     if (fgThread != 0 && fgThread != cur) attached = AttachThreadInput(cur, fgThread, true);
     BringWindowToTop(h);

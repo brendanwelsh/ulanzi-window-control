@@ -121,17 +121,33 @@ export class WindowControl {
   }
 
   // ── komorebi ──────────────────────────────────────────────────────────────────
+  // run one or more komorebic subcommands, ';'-separated, IN ORDER. Sequencing matters for
+  // multi-monitor: e.g. "focus-monitor 1; change-layout grid" targets a specific screen.
   komo(args) {
-    const parts = String(args || "").trim().split(/\s+/).filter(Boolean);
-    if (!parts.length) return false;
+    const cmds = String(args || "")
+      .split(";")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (!cmds.length) return false;
+    this._komoSeq(cmds, 0);
+    return true;
+  }
+
+  _komoSeq(cmds, i) {
+    if (i >= cmds.length) return;
+    const parts = cmds[i].split(/\s+/).filter(Boolean);
+    const next = () => this._komoSeq(cmds, i + 1);
     try {
-      const child = spawn(this.cfg.komorebicPath, parts, { detached: true, stdio: "ignore", windowsHide: true });
-      child.unref();
+      const child = spawn(this.cfg.komorebicPath, parts, { stdio: "ignore", windowsHide: true });
       this.log("komorebic " + parts.join(" "));
-      return true;
+      child.on("close", next);
+      child.on("error", (e) => {
+        this.log("komorebic failed (" + parts.join(" ") + "): " + e.message);
+        next();
+      });
     } catch (e) {
-      this.log("komorebic failed (" + parts.join(" ") + "): " + e.message);
-      return false;
+      this.log("komorebic spawn failed: " + e.message);
+      next();
     }
   }
   komoFocus(dir) {
