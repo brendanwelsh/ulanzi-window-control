@@ -12,3 +12,5 @@ config.local.json
 .DS_Store
 
 .iconbuild/
+
+KWDMLog/
