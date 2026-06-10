@@ -5,6 +5,7 @@
 param(
   [switch]$List,
   [switch]$Focus,
+  [switch]$AltTabServer,
   [long]$Hwnd = 0
 )
 
@@ -77,6 +78,36 @@ public class WinCtl {
   }
 }
 "@
+
+if ($AltTabServer) {
+  # Persistent helper: drives the NATIVE Windows Alt-Tab via injected keystrokes. The plugin
+  # writes commands to our stdin (one per line). Holding Alt keeps the switcher overlay up;
+  # 'commit' releases Alt and switches to the highlighted window. Windows owns the focus, so
+  # there's no foreground-lock to fight.
+  $ALT = [byte]0x12; $TAB = [byte]0x09; $SHIFT = [byte]0x10
+  $KEYUP = [uint32]2
+  $altDown = $false
+  function Tap($vk, $shift) {
+    if ($shift) { [WinCtl]::keybd_event($SHIFT, 0, 0, [UIntPtr]::Zero) }
+    [WinCtl]::keybd_event($vk, 0, 0, [UIntPtr]::Zero)
+    [WinCtl]::keybd_event($vk, 0, $KEYUP, [UIntPtr]::Zero)
+    if ($shift) { [WinCtl]::keybd_event($SHIFT, 0, $KEYUP, [UIntPtr]::Zero) }
+  }
+  try {
+    while ($true) {
+      $line = [Console]::In.ReadLine()
+      if ($null -eq $line) { break } # stdin closed (plugin exited)
+      switch ($line.Trim().ToLower()) {
+        "next" { if (-not $altDown) { [WinCtl]::keybd_event($ALT, 0, 0, [UIntPtr]::Zero); $altDown = $true; Start-Sleep -Milliseconds 25 }; Tap $TAB $false }
+        "prev" { if (-not $altDown) { [WinCtl]::keybd_event($ALT, 0, 0, [UIntPtr]::Zero); $altDown = $true; Start-Sleep -Milliseconds 25 }; Tap $TAB $true }
+        "commit" { if ($altDown) { [WinCtl]::keybd_event($ALT, 0, $KEYUP, [UIntPtr]::Zero); $altDown = $false } }
+        "quit" { break }
+      }
+    }
+  }
+  finally { if ($altDown) { [WinCtl]::keybd_event($ALT, 0, $KEYUP, [UIntPtr]::Zero) } }
+  exit 0
+}
 
 if ($Focus) {
   [WinCtl]::Activate([IntPtr]$Hwnd)

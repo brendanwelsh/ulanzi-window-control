@@ -202,36 +202,17 @@ $UD.onDialRotate((message) => {
   const dir = String(message.rotateEvent || "").includes("left") ? -1 : 1;
   if (message.uuid === A_KOMOFOCUS) return void wc.komoFocus(dir);
   if (message.uuid === A_SWITCHER) {
-    if (!wc.windows.length) {
-      wc.refresh();
-      return $UD.showAlert(message.context);
-    }
-    const w = wc.rotate(dir);
-    if (w) labelSwitchers(cleanTitle(w.title)); // update every switcher screen with the selection
-    // live switch: raise the highlighted window once rotation settles (~250ms idle)
-    clearTimeout(rotateFocusTimer);
-    rotateFocusTimer = setTimeout(() => {
-      const cur = wc.current();
-      if (cur) {
-        const ok = wc.focus(cur);
-        log(`switch -> "${cleanTitle(cur.title)}" (${cur.hwnd}) raised=${ok}`);
-      }
-    }, 250);
+    // drive the NATIVE Windows Alt-Tab overlay; it commits when rotation settles (or on press)
+    wc.altTab(dir);
+    labelSwitchers(dir < 0 ? "<< ALT-TAB" : "ALT-TAB >>");
   }
 });
 
 $UD.onDialDown((message) => {
   if (message.uuid === A_KOMOFOCUS) return void wc.komoMonocle();
   if (message.uuid === A_SWITCHER) {
-    const w = wc.current();
-    if (!w) {
-      wc.refresh();
-      return $UD.showAlert(message.context);
-    }
-    const ok = wc.focus(w);
-    log(`press-focus "${cleanTitle(w.title)}" (${w.hwnd}) raised=${ok}`);
-    labelSwitchers(cleanTitle(w.title));
-    if (!ok) $UD.showAlert(message.context);
+    wc.altCommit(); // press = commit the Alt-Tab selection now
+    labelSwitchers("WINDOWS");
   }
 });
 

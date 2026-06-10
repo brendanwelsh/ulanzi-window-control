@@ -31,6 +31,52 @@ export class WindowControl {
     this.windows = []; // filtered list: [{hwnd, pid, proc, title}]
     this.idx = 0;
     this.helper = path.join(__dirname, "winctl.ps1"); // sits next to this module (and in the synced copy)
+    this._altProc = null; // persistent Alt-Tab input helper
+    this._altTimer = null; // auto-commit after rotation settles
+  }
+
+  // ── native Alt-Tab switcher (rotate drives the real Windows switcher) ───────────
+  _ensureAltServer() {
+    if (this._altProc && this._altProc.stdin && this._altProc.stdin.writable) return this._altProc;
+    try {
+      const p = spawn("powershell", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", this.helper, "-AltTabServer"], {
+        stdio: ["pipe", "ignore", "ignore"],
+        windowsHide: true,
+      });
+      p.on("exit", () => {
+        if (this._altProc === p) this._altProc = null;
+      });
+      this._altProc = p;
+    } catch (e) {
+      this.log("alt-tab server spawn failed: " + e.message);
+      this._altProc = null;
+    }
+    return this._altProc;
+  }
+
+  // cycle the native Alt-Tab one step; auto-commits ~700ms after the last rotate
+  altTab(dir) {
+    const p = this._ensureAltServer();
+    if (!p) return false;
+    try {
+      p.stdin.write((dir < 0 ? "prev" : "next") + "\n");
+    } catch (e) {
+      this.log("alt-tab write failed: " + e.message);
+      return false;
+    }
+    clearTimeout(this._altTimer);
+    this._altTimer = setTimeout(() => this.altCommit(), 700);
+    return true;
+  }
+
+  // release Alt -> commit the highlighted window now
+  altCommit() {
+    clearTimeout(this._altTimer);
+    if (this._altProc && this._altProc.stdin && this._altProc.stdin.writable) {
+      try {
+        this._altProc.stdin.write("commit\n");
+      } catch (e) {}
+    }
   }
 
   // ── window list ───────────────────────────────────────────────────────────────
