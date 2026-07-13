@@ -1,5 +1,7 @@
 # ulanzi-window-control
 
+[![Available on Ulanzi Community Store](https://raw.githubusercontent.com/narlei/ulanzicommunitystore/main/docs/badges/ulanzi-community-store.svg)](https://ulanzicommunitystore.narlei.com)
+
 > Drive your windows from an Ulanzi dial: **rotate** to scroll windows (terminals or all),
 > **press** to focus — plus **komorebi** tiling controls (focus/monocle on the knob;
 > retile/float/pause/layout on keys).
