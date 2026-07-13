@@ -3,7 +3,7 @@
   "Name": "Window Control",
   "Description": "Drive your windows from the Ulanzi dial: rotate to scroll windows (terminals or all) and press to focus; plus komorebi tiling controls — focus/monocle on the knob, retile/float/pause/layout on keys.",
   "Icon": "resources/pluginIcon.png",
-  "Version": "1.0.0",
+  "Version": "1.0.1",
   "Category": "Window Control",
   "CategoryIcon": "resources/categoryIcon.png",
   "CodePath": "plugin/app.js",
