@@ -49,6 +49,11 @@ export class WindowControl {
       p.on("exit", () => {
         if (this._altProc === p) this._altProc = null;
       });
+      // a write to a helper that just died raises EPIPE on stdin asynchronously; unhandled, that
+      // 'error' event would crash the plugin. Drop the dead helper so the next rotate respawns it.
+      const drop = (e) => { this.log("alt-tab server error: " + e.message); if (this._altProc === p) this._altProc = null; };
+      p.on("error", drop);
+      p.stdin.on("error", drop);
       this._altProc = p;
     } catch (e) {
       this.log("alt-tab server spawn failed: " + e.message);
